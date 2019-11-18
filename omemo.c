@@ -86,10 +86,13 @@ static gboolean plugin_load(PurplePlugin* plugin)
 	signal_crypto_provider provider = {
 		.random_func = random_generator,
 		.hmac_sha256_init_func = hmac_sha256_init,
-		.hmac_sha256_update_func = hmac_sha256_update,
+		.hmac_sha256_update_func = hmac_sha_update,
 		.hmac_sha256_final_func = hmac_sha256_final,
-		.hmac_sha256_cleanup_func = hmac_sha256_cleanup,
-		.sha512_digest_func = sha512_digest,
+		.hmac_sha256_cleanup_func = hmac_sha_cleanup,
+		.sha512_digest_init_func = hmac_sha512_init,
+		.sha512_digest_update_func = hmac_sha_update,
+		.sha512_digest_final_func = hmac_sha512_final,
+		.sha512_digest_cleanup_func = hmac_sha_cleanup,
 		.encrypt_func = encrypt,
 		.decrypt_func = decrypt,
 		.user_data = NULL

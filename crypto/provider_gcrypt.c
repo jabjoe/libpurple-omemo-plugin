@@ -42,7 +42,7 @@ int random_generator(uint8_t* data, size_t len, void* user_data)
 	return 0;
 }
 
-int hmac_sha256_init(void** hmac_context, const uint8_t* key, size_t key_len, void* user_data)
+static int hmac_sha_init(void** hmac_context, int algo, const uint8_t* key, size_t key_len, void* user_data)
 {
 	gcry_mac_hd_t* handle = NULL;
 	gcry_error_t err = GPG_ERR_NO_ERROR;
@@ -52,7 +52,7 @@ int hmac_sha256_init(void** hmac_context, const uint8_t* key, size_t key_len, vo
 		return SG_ERR_NOMEM;
 	}
 
-	err = gcry_mac_open(handle, GCRY_MAC_HMAC_SHA256, 0, NULL);
+	err = gcry_mac_open(handle, algo, 0, NULL);
 	if (err) {
 		purple_debug_error(PLUGIN_ID, "%s: %s\n", gcry_strsource(err), gcry_strerror(err));
 		free(handle);
@@ -72,7 +72,20 @@ int hmac_sha256_init(void** hmac_context, const uint8_t* key, size_t key_len, vo
 	return 0;
 }
 
-int hmac_sha256_update(void* hmac_context, const uint8_t* data, size_t data_len, void* user_data)
+
+int hmac_sha256_init(void** hmac_context, const uint8_t* key, size_t key_len, void* user_data)
+{
+	return hmac_sha_init(hmac_context, GCRY_MAC_HMAC_SHA256, key, key_len, user_data);
+}
+
+
+int hmac_sha512_init(void** hmac_context, const uint8_t* key, size_t key_len, void* user_data)
+{
+	return hmac_sha_init(hmac_context, GCRY_MAC_HMAC_SHA512, key, key_len, user_data);
+}
+
+
+int hmac_sha_update(void* hmac_context, const uint8_t* data, size_t data_len, void* user_data)
 {
 	gcry_mac_hd_t* handle = NULL;
 	gcry_error_t err = GPG_ERR_NO_ERROR;
@@ -87,9 +100,10 @@ int hmac_sha256_update(void* hmac_context, const uint8_t* data, size_t data_len,
 	return 0;
 }
 
-int hmac_sha256_final(void* hmac_context, signal_buffer** output, void* user_data)
+
+static int hmac_sha_final(void* hmac_context, int algo, signal_buffer** output, void* user_data)
 {
-	size_t len = gcry_mac_get_algo_maclen(GCRY_MAC_HMAC_SHA256);
+	size_t len = gcry_mac_get_algo_maclen(algo);
 	gcry_mac_hd_t* handle = NULL;
 	uint8_t buffer[len];
 	signal_buffer* output_buffer = NULL;
@@ -107,14 +121,25 @@ int hmac_sha256_final(void* hmac_context, signal_buffer** output, void* user_dat
 		return SG_ERR_NOMEM;
 	}
 
-	//purple_debug_misc(PLUGIN_ID, _("HMAC SHA-256 finalized\n"));
-
 	*output = output_buffer;
 
 	return 0;
 }
 
-void hmac_sha256_cleanup(void* hmac_context, void* user_data)
+
+int hmac_sha256_final(void* hmac_context, signal_buffer** output, void* user_data)
+{
+	return hmac_sha_final(hmac_context, GCRY_MAC_HMAC_SHA256, output, user_data);
+}
+
+
+int hmac_sha512_final(void* hmac_context, signal_buffer** output, void* user_data)
+{
+	return hmac_sha_final(hmac_context, GCRY_MAC_HMAC_SHA256, output, user_data);
+}
+
+
+void hmac_sha_cleanup(void* hmac_context, void* user_data)
 {
 	gcry_mac_hd_t* handle = NULL;
 
@@ -124,24 +149,6 @@ void hmac_sha256_cleanup(void* hmac_context, void* user_data)
 	free(handle);
 }
 
-int sha512_digest(signal_buffer** output, const uint8_t* data, size_t data_len, void* user_data)
-{
-	uint8_t buffer[gcry_md_get_algo_dlen(GCRY_MD_SHA512)];
-	signal_buffer* output_buffer = NULL;
-
-	gcry_md_hash_buffer(GCRY_MD_SHA512, buffer, data, data_len);
-
-	output_buffer = signal_buffer_create(buffer, gcry_md_get_algo_dlen(GCRY_MD_SHA512));
-	if (!output_buffer) {
-		return SG_ERR_NOMEM;
-	}
-
-	//purple_debug_misc(PLUGIN_ID, _("Computed SHA-512 hash value\n"));
-
-	*output = output_buffer;
-
-	return 0;
-}
 
 static int encrypt_aes_cbc(signal_buffer** output,
 	const uint8_t* key,

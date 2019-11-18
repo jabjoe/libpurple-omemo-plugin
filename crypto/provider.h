@@ -35,14 +35,15 @@ int init_crypto_provider(void);
 int random_generator(uint8_t* data, size_t len, void* user_data);
 
 int hmac_sha256_init(void** hmac_context, const uint8_t* key, size_t key_len, void* user_data);
+int hmac_sha512_init(void** hmac_context, const uint8_t* key, size_t key_len, void* user_data);
 
-int hmac_sha256_update(void* hmac_context, const uint8_t* data, size_t data_len, void* user_data);
+int hmac_sha_update(void* hmac_context, const uint8_t* data, size_t data_len, void* user_data);
 
 int hmac_sha256_final(void* hmac_context, signal_buffer** output, void* user_data);
+int hmac_sha512_final(void* hmac_context, signal_buffer** output, void* user_data);
 
-void hmac_sha256_cleanup(void* hmac_context, void* user_data);
+void hmac_sha_cleanup(void* hmac_context, void* user_data);
 
-int sha512_digest(signal_buffer** output, const uint8_t* data, size_t data_len, void* user_data);
 
 int encrypt(signal_buffer** output,
 	int cipher,
